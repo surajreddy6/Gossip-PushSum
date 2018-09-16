@@ -1,7 +1,6 @@
 defmodule NwNode do
   use GenServer
 
-
   def start_link(opts)  do
       GenServer.start_link(__MODULE__, :ok, opts)
   end
@@ -29,12 +28,14 @@ defmodule NwNode do
     {server, msg} = args
     count = Map.get(state, :count)
     #if count is 10 then handle
-    IO.inspect %{pid: server, count: count}
+    #IO.inspect %{count: count, pid: server}
     if count < 5 do
       # IO.puts "Gossiping"
       next_neighbor = Enum.random(Map.get(state, :neigh))
-      IO.inspect %{im: server, gossiping_with: next_neighbor}
+      #IO.inspect %{gossiping_with: next_neighbor, im: server}
       NwNode.gossip(next_neighbor, {next_neighbor, msg})
+      # send a message to the current node to continue gossiping
+      Process.send_after(server, {:gossip, args}, :rand.uniform(100))
       {:noreply, Map.replace!(state, :count, count + 1)}
     else
       IO.puts "I'm done"
@@ -42,4 +43,12 @@ defmodule NwNode do
     end
   end
 
+  def handle_info({:gossip, args}, state) do
+    {server, msg} = args
+    count = Map.get(state, :count)
+    if count < 5 do
+      NwNode.gossip(server, {server, msg})
+    end
+    {:noreply, state}
+  end
 end

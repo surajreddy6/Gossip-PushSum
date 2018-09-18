@@ -14,7 +14,7 @@ defmodule NwNode do
   end
 
   def init(:ok) do
-      {:ok, %{:neigh => [], :count => 0, :msg => nil}}
+      {:ok, %{:neigh => [], :count => 0, :msg => ""}}
   end
 
   def handle_cast({:set_neighbors, args}, state) do
@@ -27,15 +27,15 @@ defmodule NwNode do
 
     {server, msg} = args
     count = Map.get(state, :count)
-    #if count is 10 then handle
-    #IO.inspect %{count: count, pid: server}
+
     if count < 5 do
-      # IO.puts "Gossiping"
       next_neighbor = Enum.random(Map.get(state, :neigh))
-      #IO.inspect %{gossiping_with: next_neighbor, im: server}
       NwNode.gossip(next_neighbor, {next_neighbor, msg})
-      # send a message to the current node to continue gossiping
       Process.send_after(server, {:gossip, args}, :rand.uniform(100))
+
+      #TODO figure out how to update state only once - scope issue
+      state = Map.replace!(state, :msg, msg)
+
       {:noreply, Map.replace!(state, :count, count + 1)}
     else
       IO.puts "I'm done"

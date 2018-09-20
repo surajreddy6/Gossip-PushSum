@@ -10,18 +10,19 @@ defmodule Full do
     Supervisor.count_children(pid)
     child_nodes = Supervisor.which_children(pid)
 
-    child_pids =
+    child_names =
       Enum.map(child_nodes, fn curr_node ->
-        {_, curr_pid, _, _} = curr_node
-            IO.puts "What is alive"
-            IO.inspect Process.alive?(curr_pid)
-        curr_pid
+        {curr_name, _, _, _} = curr_node
+            # IO.puts "What is alive"
+            # IO.inspect Process.alive?(curr_pid)
+        curr_name
       end)
 
+    IO.inspect child_names
+
     # setup a fully connected network
-    Enum.map(child_nodes, fn curr_node ->
-      {node_name, curr_pid, _, _} = curr_node
-      NwNode.set_neighbors(curr_pid, List.delete(child_pids, curr_pid))
+    Enum.map(child_names, fn curr_name ->
+      NwNode.set_neighbors(curr_name, List.delete(child_names, curr_name))
     end)
 
     # returning supervisor pid
@@ -37,7 +38,7 @@ defmodule Full do
 
             %{
               id: node_name,
-              start: {NwNode, :start_link, [:gossip, []]}
+              start: {NwNode, :start_link, [:gossip, [name: node_name]]}
             }
           end)
 
@@ -49,7 +50,7 @@ defmodule Full do
             node_name = ("Node" <> Integer.to_string(i)) |> String.to_atom()
             %{
               id: node_name,
-              start: {NwNode, :start_link, [{:pushsum, i}, []]}
+              start: {NwNode, :start_link, [{:pushsum, i}, [name: node_name]]}
             }
           end)
 

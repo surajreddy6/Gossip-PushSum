@@ -78,11 +78,11 @@ defmodule NwNode do
       boolean_list = Enum.map(queue_list, fn(i) ->
         i <= 0.001
       end)
-      IO.puts "boolean_list"
-      IO.inspect boolean_list
+      # IO.puts "boolean_list"
+      # IO.inspect boolean_list
       if boolean_list == [true, true, true] do
         #terminate
-        IO.puts "I'm done"
+        # IO.puts "I'm done"
         {:noreply, state}
       else
         state = Map.replace!(state, :s, s_t)
@@ -92,7 +92,7 @@ defmodule NwNode do
         queue = :queue.in(ratio_diff, queue)
         state = Map.replace!(state, :queue, queue)
         NwNode.pushsum(next_neighbor, {next_neighbor, s_t, w_t})
-        Process.send_after(server, {:pushsum, {server, s, w}}, :rand.uniform(100))
+        Process.send_after(server, {:pushsum, {server, s_t, w_t}}, :rand.uniform(100))
         {:noreply, state}
       end
     else
@@ -102,7 +102,7 @@ defmodule NwNode do
       queue = :queue.in(ratio_diff, queue)
       state = Map.replace!(state, :queue, queue)
       NwNode.pushsum(next_neighbor, {next_neighbor, s_t, w_t})
-      Process.send_after(server, {:pushsum, {server, s, w}}, :rand.uniform(100))
+      Process.send_after(server, {:pushsum, {server, s_t, w_t}}, :rand.uniform(100))
       {:noreply, state}
     end
   end

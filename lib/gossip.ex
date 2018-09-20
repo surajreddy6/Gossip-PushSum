@@ -19,13 +19,12 @@ defmodule Startnw do
       {:pushsum} ->
         Enum.map(child_nodes, fn child ->
           {_, pid, _, _} = child
-          IO.inspect(:sys.get_state(pid))
         end)
         NwNode.pushsum(first_node, {first_node, 0, 0})
     end
     # Read state of all nodes
-    Enum.each(0..5, fn i ->
-      :timer.sleep(2000)
+    Enum.each(0..1, fn i ->
+      :timer.sleep(10000)
       IO.puts("Iteration - #{i}")
 
       Enum.map(child_nodes, fn child ->

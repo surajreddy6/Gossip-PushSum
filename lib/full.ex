@@ -4,8 +4,8 @@ defmodule Full do
   def create_child_nodes(children) do
     # start child nodes under supervisor
     {:ok, pid} = Supervisor.start_link(children, strategy: :one_for_one)
+    {:ok, listener_pid} = Listener.start_link(name: MyListener)
 
-    :timer.sleep(2000)
     # get pids, names of child nodes
     Supervisor.count_children(pid)
     child_nodes = Supervisor.which_children(pid)
@@ -13,17 +13,20 @@ defmodule Full do
     child_names =
       Enum.map(child_nodes, fn curr_node ->
         {curr_name, _, _, _} = curr_node
-            # IO.puts "What is alive"
-            # IO.inspect Process.alive?(curr_pid)
+        # IO.puts "What is alive"
+        # IO.inspect Process.alive?(curr_pid)
         curr_name
       end)
 
-    IO.inspect child_names
+    IO.inspect(child_names)
 
     # setup a fully connected network
     Enum.map(child_names, fn curr_name ->
       NwNode.set_neighbors(curr_name, List.delete(child_names, curr_name))
+      Listener.set_neighbors(listener_pid, {curr_name, List.delete(child_names, curr_name)})
     end)
+
+    IO.inspect(:sys.get_state(listener_pid))
 
     # returning supervisor pid
     pid
@@ -48,6 +51,7 @@ defmodule Full do
         children =
           Enum.map(0..(n - 1), fn i ->
             node_name = ("Node" <> Integer.to_string(i)) |> String.to_atom()
+
             %{
               id: node_name,
               start: {NwNode, :start_link, [{:pushsum, i}, [name: node_name]]}

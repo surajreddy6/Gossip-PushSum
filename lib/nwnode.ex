@@ -22,7 +22,7 @@ defmodule NwNode do
   end
 
   def init({:pushsum, start_number}) do
-    {:ok, %{:neigh => [], :s => start_number, :w => 1, :queue => :queue.new}}
+    {:ok, %{:neigh => [], :s => start_number, :w => 1, :queue => :queue.new()}}
   end
 
   def handle_cast({:set_neighbors, args}, state) do
@@ -58,7 +58,7 @@ defmodule NwNode do
     w = Map.fetch!(state, :w)
 
     # ratio from previous iteration
-    old_ratio = s/w
+    old_ratio = s / w
 
     state = Map.replace!(state, :s, s + new_s)
     state = Map.replace!(state, :w, w + new_w)
@@ -69,20 +69,24 @@ defmodule NwNode do
 
     # creating queue to store the s/w
     queue = Map.fetch!(state, :queue)
-    ratio = s_t/w_t
+    ratio = s_t / w_t
 
     ratio_diff = abs(ratio - old_ratio)
 
     if :queue.len(queue) == 3 do
       queue_list = :queue.to_list(queue)
-      boolean_list = Enum.map(queue_list, fn(i) ->
-        i <= 0.001
-      end)
+
+      boolean_list =
+        Enum.map(queue_list, fn i ->
+          i <= 0.001
+        end)
+
       # IO.puts "boolean_list"
       # IO.inspect boolean_list
       if boolean_list == [true, true, true] do
-        #terminate
+        # terminate
         # IO.puts "I'm done"
+        Listener.delete_me(MyListener, server)
         {:noreply, state}
       else
         state = Map.replace!(state, :s, s_t)

@@ -2,14 +2,22 @@ defmodule Startnw do
   def start(supervisor_pid, algo) do
     child_nodes = Supervisor.which_children(supervisor_pid)
 
-    child_pids =
+    child_names =
       Enum.map(child_nodes, fn curr_node ->
-        {_, curr_pid, _, _} = curr_node
-        curr_pid
+        {curr_name, _, _, _} = curr_node
+        # IO.puts "What is alive"
+        # IO.inspect Process.alive?(curr_pid)
+        curr_name
       end)
 
+    # child_pids =
+    #   Enum.map(child_nodes, fn curr_node ->
+    #     {_, curr_pid, _, _} = curr_node
+    #     curr_pid
+    #   end)
+
     # sending the first GOSSIP message
-    first_node = Enum.random(child_pids)
+    first_node = Enum.random(child_names)
     # TODO message dynamic
 
     case {algo} do
@@ -20,8 +28,10 @@ defmodule Startnw do
         Enum.map(child_nodes, fn child ->
           {_, pid, _, _} = child
         end)
+
         NwNode.pushsum(first_node, {first_node, 0, 0})
     end
+
     # Read state of all nodes
     Enum.each(0..1, fn i ->
       :timer.sleep(10000)

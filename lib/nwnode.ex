@@ -9,6 +9,10 @@ defmodule NwNode do
     GenServer.cast(server, {:set_neighbors, args})
   end
 
+  def update_neighbors(server, args) do
+    GenServer.cast(server, {:update_neighbors, args})
+  end
+
   def get_neighbors(server) do
     GenServer.call(server, {:get_neighbors})
   end
@@ -41,9 +45,20 @@ defmodule NwNode do
   end
 
   def handle_cast({:set_neighbors, args}, state) do
+    # neighbors = Map.fetch!(state, :neigh)
+    # neighbors = neighbors ++ args
     state = Map.replace!(state, :neigh, args)
     {:noreply, state}
   end
+
+  def handle_cast({:update_neighbors, args}, state) do
+    neighbors = Map.fetch!(state, :neigh)
+    neighbors = neighbors ++ args
+    IO.inspect neighbors
+    state = Map.replace!(state, :neigh, neighbors)
+    {:noreply, state}
+  end
+
 
   def handle_cast({:gossip, args}, state) do
     # for first time receiving msg update state

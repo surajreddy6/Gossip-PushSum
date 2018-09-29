@@ -26,6 +26,11 @@ case {topology} do
     # Startnw.start(supervisor_pid, algo)
     :timer.sleep(10000000)
 
+  {:d3} ->
+    supervisor_pid = D3.setup(n, algo)
+    # Startnw.start(supervisor_pid, algo)
+    :timer.sleep(10000000)
+
     # case {algo} do
     #   {:gossip} ->
     #     Startnw.start(supervisor_pid)

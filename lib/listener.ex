@@ -9,6 +9,10 @@ defmodule Listener do
     GenServer.cast(server, {:set_neighbors, args})
   end
 
+  def update_neighbors(server, args) do
+    GenServer.cast(server, {:update_neighbors, args})
+  end
+
   def delete_me(server, node_name) do
     # node_name is passed
     GenServer.cast(server, {:delete_me, node_name})
@@ -26,6 +30,16 @@ defmodule Listener do
   def handle_cast({:set_neighbors, args}, state) do
     {node_name, node_neighbors} = args
     neighbors_list = Map.fetch!(state, :neighbors)
+    neighbors_list = Map.put(neighbors_list, node_name, node_neighbors)
+    state = Map.replace!(state, :neighbors, neighbors_list)
+    {:noreply, state}
+  end
+
+  def handle_cast({:update_neighbors, args}, state) do
+    {node_name, node_neighbors} = args
+    neighbors_list = Map.fetch!(state, :neighbors)
+    current_neighbors = Map.fetch!(neighbors_list, node_name)
+    node_neighbors = current_neighbors ++ node_neighbors
     neighbors_list = Map.put(neighbors_list, node_name, node_neighbors)
     state = Map.replace!(state, :neighbors, neighbors_list)
     {:noreply, state}

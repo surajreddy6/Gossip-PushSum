@@ -9,6 +9,14 @@ defmodule NwNode do
     GenServer.cast(server, {:set_neighbors, args})
   end
 
+  def get_neighbors(server) do
+    GenServer.call(server, {:get_neighbors})
+  end
+
+  def remove_neighbor(server, node_name) do
+    GenServer.cast(server, {:remove_neighbor, node_name})
+  end
+
   def gossip(server, args) do
     GenServer.cast(server, {:gossip, args})
   end
@@ -25,6 +33,13 @@ defmodule NwNode do
     {:ok, %{:neigh => [], :s => start_number, :w => 1, :queue => :queue.new()}}
   end
 
+  def handle_cast({:remove_neighbor, node_name}, state) do
+    neighbors = Map.fetch!(state, :neigh)
+    neighbors = List.delete(neighbors, node_name)
+    state = Map.replace!(state, :neigh, neighbors)
+    {:noreply, state}
+  end
+
   def handle_cast({:set_neighbors, args}, state) do
     state = Map.replace!(state, :neigh, args)
     {:noreply, state}
@@ -32,25 +47,29 @@ defmodule NwNode do
 
   def handle_cast({:gossip, args}, state) do
     # for first time receiving msg update state
+    # server -  current nodes name
     {server, msg} = args
     count = Map.get(state, :count)
 
-    if count < 5 do
+    if count < 10 do
+      # picking a random neighbor from the current node's (server's) neighbor list
       next_neighbor = Enum.random(Map.get(state, :neigh))
       NwNode.gossip(next_neighbor, {next_neighbor, msg})
       Process.send_after(server, {:gossip, args}, :rand.uniform(100))
 
       # TODO figure out how to update state only once - scope issue
       state = Map.replace!(state, :msg, msg)
-
       {:noreply, Map.replace!(state, :count, count + 1)}
     else
       IO.puts("I'm done")
+      # find a way to talk to LISTENER
+      Listener.gossip_done(MyListener, server)
       {:noreply, state}
     end
   end
 
   def handle_cast({:pushsum, args}, state) do
+    IO.puts("pushsum")
     {server, new_s, new_w} = args
 
     # create a function for this repeatitive thing
@@ -109,6 +128,11 @@ defmodule NwNode do
       Process.send_after(server, {:pushsum, {server, s_t, w_t}}, :rand.uniform(100))
       {:noreply, state}
     end
+  end
+
+  def handle_call({:get_neighbors}, _from, state) do
+    neighbors = Map.fetch!(state, :neigh)
+    {:reply, neighbors, state}
   end
 
   def handle_info({:pushsum, args}, state) do

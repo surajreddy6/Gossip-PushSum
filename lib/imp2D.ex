@@ -1,11 +1,9 @@
-defmodule Full do
+defmodule Imp2D do
   # node names need to be CAPITAL
   # generate a list of children to start under supervisor
   def create_child_nodes(children) do
-    # start child nodes under supervisor
-    {:ok, pid} = Supervisor.start_link(children, strategy: :one_for_one)
-    # to listen to all the child nodes (keeping track of dead or alive state)
-    {:ok, listener_pid} = Listener.start_link(name: MyListener)
+    # setup a line network
+    pid = Line.create_child_nodes(children)
 
     # get pids, names of child nodes
     # Supervisor.count_children(pid)
@@ -18,17 +16,17 @@ defmodule Full do
         curr_name
       end)
 
-    # IO.inspect(child_names)
+    Enum.each(child_names, fn curr_node ->
+      neighbors = NwNode.get_neighbors(curr_node)
+      random_node = Enum.random(child_names)
+      NwNode.set_neighbors(curr_node, [random_node | neighbors])
+      Listener.set_neighbors(MyListener, {curr_node, [random_node | neighbors]})
 
-    # setup a fully connected network
-    Enum.map(child_names, fn curr_name ->
-      # setting neighbors for each node, in full that is every other node
-      NwNode.set_neighbors(curr_name, List.delete(child_names, curr_name))
-      # sending neighbor info of each node to listener
-      Listener.set_neighbors(listener_pid, {curr_name, List.delete(child_names, curr_name)})
+      # TODO: Play around with this
+      # random_node_neighbors = NwNode.get_neighbors(random_node)
+      # NwNode.set_neighbors(random_node, [curr_node | random_node_neighbors])
+      # Listener.set_neighbors(MyListener, {random_node, [curr_node | random_node_neighbors]})
     end)
-
-    # IO.inspect(:sys.get_state(listener_pid))
 
     # returning supervisor pid
     pid

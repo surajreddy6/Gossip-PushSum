@@ -1,4 +1,4 @@
-defmodule Full do
+defmodule Line do
   # node names need to be CAPITAL
   # generate a list of children to start under supervisor
   def create_child_nodes(children) do
@@ -19,16 +19,28 @@ defmodule Full do
       end)
 
     # IO.inspect(child_names)
+    # for the first and last node
 
-    # setup a fully connected network
-    Enum.map(child_names, fn curr_name ->
-      # setting neighbors for each node, in full that is every other node
-      NwNode.set_neighbors(curr_name, List.delete(child_names, curr_name))
-      # sending neighbor info of each node to listener
-      Listener.set_neighbors(listener_pid, {curr_name, List.delete(child_names, curr_name)})
+    # TODO: put this in a clean function
+    first_node = Enum.fetch!(child_names, 0)
+    last_node = Enum.fetch!(child_names, length(child_names) - 1)
+    NwNode.set_neighbors(first_node, [Enum.fetch!(child_names, 1)])
+    Listener.set_neighbors(listener_pid, {first_node, [Enum.fetch!(child_names, 1)]})
+    NwNode.set_neighbors(last_node, [Enum.fetch!(child_names, length(child_names) - 2)])
+
+    Listener.set_neighbors(
+      listener_pid,
+      {last_node, [Enum.fetch!(child_names, length(child_names) - 2)]}
+    )
+
+    # setup a line network
+    Enum.each(1..(length(child_names) - 2), fn i ->
+      prev = Enum.fetch!(child_names, i - 1)
+      curr = Enum.fetch!(child_names, i)
+      next = Enum.fetch!(child_names, i + 1)
+      NwNode.set_neighbors(curr, [prev, next])
+      Listener.set_neighbors(listener_pid, {curr, [prev, next]})
     end)
-
-    # IO.inspect(:sys.get_state(listener_pid))
 
     # returning supervisor pid
     pid

@@ -1,3 +1,4 @@
+:observer.start()
 [n, topology, algo] = System.argv
 
 {n, _} = Integer.parse(n)
@@ -9,6 +10,21 @@ case {topology} do
   {:full} ->
     supervisor_pid = Full.setup(n, algo)
     Startnw.start(supervisor_pid, algo)
+
+  {:line} ->
+    supervisor_pid = Line.setup(n, algo)
+    # Startnw.start(supervisor_pid, algo)
+    :timer.sleep(10000000)
+
+  {:imp2D} ->
+    supervisor_pid = Imp2D.setup(n, algo)
+    # Startnw.start(supervisor_pid, algo)
+    :timer.sleep(10000000)
+
+  {:sphere} ->
+    supervisor_pid = Sphere.setup(n, algo)
+    # Startnw.start(supervisor_pid, algo)
+    :timer.sleep(10000000)
 
     # case {algo} do
     #   {:gossip} ->

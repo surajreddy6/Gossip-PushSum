@@ -14,6 +14,11 @@ defmodule Listener do
     GenServer.cast(server, {:delete_me, node_name})
   end
 
+  def gossip_done(server, node_name) do
+    # node_name is passed
+    GenServer.cast(server, {:gossip_done, node_name})
+  end
+
   def init(:ok) do
     {:ok, %{:dead_nodes => [], :neighbors => %{}}}
   end
@@ -26,11 +31,38 @@ defmodule Listener do
     {:noreply, state}
   end
 
+  def handle_cast({:gossip_done, node_name}, state) do
+    neighbors_list = Map.fetch!(state, :neighbors)
+    dead_nodes = Map.fetch!(state, :dead_nodes)
+    dead_nodes = [node_name | dead_nodes]
+    # fetch neighbors of the node to be deleted. 
+    curr_neighbors = Map.fetch!(neighbors_list, node_name)
+    # iterate through the neighbors of the node to be deleted
+    Enum.each(curr_neighbors, fn neighbor ->
+      # neighbors_neighbors is a list of each (neighbor of node_name)'s neighbors
+      neighbors_neighbors = Map.fetch!(neighbors_list, neighbor)
+      neighbors_neighbors = List.delete(neighbors_neighbors, node_name)
+      # now neighbors_neighbors is the new updated list
+      neighbors_list = Map.replace!(neighbors_list, neighbor, neighbors_neighbors)
+      # update each node's neighbors list in nwnode.ex
+      NwNode.remove_neighbor(neighbor, node_name)
+      state = Map.replace!(state, :neighbors, neighbors_list)
+    end)
+
+    neighbors_list_count = Enum.count(Map.keys(neighbors_list))
+
+    if Enum.count(dead_nodes) == neighbors_list_count do
+      IO.puts("All done!!")
+      exit(:shutdown)
+    end
+
+    state = Map.replace!(state, :dead_nodes, dead_nodes)
+    {:noreply, state}
+  end
+
   def handle_cast({:delete_me, node_name}, state) do
     dead_nodes = Map.fetch!(state, :dead_nodes)
-
-    IO.inspect dead_nodes
-
+    IO.inspect(dead_nodes)
 
     if node_name not in dead_nodes do
       dead_nodes = [node_name | dead_nodes]
@@ -46,10 +78,10 @@ defmodule Listener do
         neighbors_neighbors = List.delete(neighbors_neighbors, node_name)
         # now neighbors_neighbors is the new updated list
         neighbors_list = Map.replace!(neighbors_list, neighbor, neighbors_neighbors)
-        NwNode.set_neighbors(neighbor, neighbors_neighbors)
+        NwNode.remove_neighbor(neighbor, node_name)
+        state = Map.replace!(state, :neighbors, neighbors_list)
       end)
 
-      state = Map.replace!(state, :neighbors, neighbors_list)
       {:noreply, state}
     else
       {:noreply, state}

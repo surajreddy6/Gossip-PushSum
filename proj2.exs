@@ -42,7 +42,6 @@ case {topology} do
     IO.puts "Setting up #{topology} network"
     supervisor_pid = Rand2D.setup(n, algo)
     IO.puts "Starting #{algo} algorithm"
-    # :timer.sleep(100000000)
     :erlang.statistics(:wall_clock)
     Startnw.start(supervisor_pid, algo)
   end

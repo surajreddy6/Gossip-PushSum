@@ -6,7 +6,7 @@ defmodule NwNode do
   end
 
   def get_state(server) do
-    GenServer.call(server, {:get_state})
+    GenServer.call(server, {:get_state}, 10000)
   end
 
   def set_neighbors(server, args) do
@@ -18,7 +18,7 @@ defmodule NwNode do
   end
 
   def get_neighbors(server) do
-    GenServer.call(server, {:get_neighbors})
+    GenServer.call(server, {:get_neighbors}, 10000)
   end
 
   def remove_neighbor(server, node_name) do
@@ -91,32 +91,32 @@ defmodule NwNode do
   def handle_cast({:pushsum, args}, state) do
     {server, new_s, new_w} = args
     neighbors = Map.get(state, :neigh)
+    # create a function for this repeatitive thing
+    s = Map.fetch!(state, :s)
+    w = Map.fetch!(state, :w)
+
+    # ratio from previous iteration
+    old_ratio = s / w
+
+    state = Map.replace!(state, :s, s + new_s)
+    state = Map.replace!(state, :w, w + new_w)
+
+    # storing half the updated s and w : Need to send and retain the same
+    s_t = Map.fetch!(state, :s) / 2
+    w_t = Map.fetch!(state, :w) / 2
+
+    # creating queue to store the s/w
+    queue = Map.fetch!(state, :queue)
+    ratio = s_t / w_t
+
+    ratio_diff = abs(ratio - old_ratio)
 
     if neighbors == [] do
-      IO.puts("OVER")
+      IO.puts("No neighbors to reach")
       Listener.delete_me(MyListener, server)
+      Startnw.start(Super, :pushsum)
       {:noreply, state}
     else
-      # create a function for this repeatitive thing
-      s = Map.fetch!(state, :s)
-      w = Map.fetch!(state, :w)
-
-      # ratio from previous iteration
-      old_ratio = s / w
-
-      state = Map.replace!(state, :s, s + new_s)
-      state = Map.replace!(state, :w, w + new_w)
-
-      # storing half the updated s and w : Need to send and retain the same
-      s_t = Map.fetch!(state, :s) / 2
-      w_t = Map.fetch!(state, :w) / 2
-
-      # creating queue to store the s/w
-      queue = Map.fetch!(state, :queue)
-      ratio = s_t / w_t
-
-      ratio_diff = abs(ratio - old_ratio)
-
       if :queue.len(queue) == 3 do
         queue_list = :queue.to_list(queue)
 

@@ -8,6 +8,9 @@ defmodule Startnw do
         curr_name
       end)
 
+    dead_nodes = Listener.get_dead_nodes(MyListener)
+    alive_nodes = child_names -- dead_nodes
+
     # child_pids =
     #   Enum.map(child_nodes, fn curr_node ->
     #     {_, curr_pid, _, _} = curr_node
@@ -15,7 +18,7 @@ defmodule Startnw do
     #   end)
 
     # sending the first GOSSIP message
-    first_node = Enum.random(child_names)
+    first_node = Enum.random(alive_nodes)
     # TODO: message dynamic, current message is "Blue"
 
     case {algo} do

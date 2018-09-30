@@ -23,6 +23,11 @@ defmodule Listener do
     GenServer.cast(server, {:gossip_done, node_name})
   end
 
+  def get_dead_nodes(server) do
+    # node_name is passed
+    GenServer.call(server, {:get_dead_nodes}, 10000)
+  end
+
   def init(:ok) do
     {:ok, %{:dead_nodes => [], :neighbors => %{}}}
   end
@@ -86,5 +91,10 @@ defmodule Listener do
     else
       {:noreply, state}
     end
+  end
+
+
+  def handle_call({:get_dead_nodes}, _from, state) do
+    {:reply, state[:dead_nodes], state}
   end
 end

@@ -33,7 +33,7 @@ defmodule D3 do
 
     d3array = 0..length(list_2darray) |> Stream.zip(list_2darray) |> Enum.into(%{})
 
-    IO.inspect d3array
+    IO.inspect(d3array)
 
     # setting up basic 2D grip topology 
     Enum.each(d3array, fn {key, val} ->
@@ -54,8 +54,15 @@ defmodule D3 do
               Listener.update_neighbors(listener_pid, {d3array[k][i][j], [d3array[k - 1][i][j]]})
 
             true ->
-              NwNode.update_neighbors(d3array[k][i][j], [d3array[k - 1][i][j], d3array[k + 1][i][j]])
-              Listener.update_neighbors(listener_pid, {d3array[k][i][j], [d3array[k - 1][i][j], d3array[k + 1][i][j]]})
+              NwNode.update_neighbors(d3array[k][i][j], [
+                d3array[k - 1][i][j],
+                d3array[k + 1][i][j]
+              ])
+
+              Listener.update_neighbors(
+                listener_pid,
+                {d3array[k][i][j], [d3array[k - 1][i][j], d3array[k + 1][i][j]]}
+              )
           end
         end)
       end)

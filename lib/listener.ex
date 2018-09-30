@@ -76,7 +76,7 @@ defmodule Listener do
 
   def handle_cast({:delete_me, node_name}, state) do
     dead_nodes = Map.fetch!(state, :dead_nodes)
-    IO.inspect(dead_nodes)
+    # IO.inspect(dead_nodes)
 
     if node_name not in dead_nodes do
       dead_nodes = [node_name | dead_nodes]
@@ -93,8 +93,21 @@ defmodule Listener do
         # now neighbors_neighbors is the new updated list
         neighbors_list = Map.replace!(neighbors_list, neighbor, neighbors_neighbors)
         NwNode.remove_neighbor(neighbor, node_name)
-        state = Map.replace!(state, :neighbors, neighbors_list)
+        set_neighbors(MyListener, {neighbor, neighbors_neighbors})
+        # state = Map.replace!(state, :neighbors, neighbors_list)
       end)
+
+      neighbors_list_count = Enum.count(Map.keys(neighbors_list))
+      if Enum.count(dead_nodes) == neighbors_list_count do
+        Enum.each(dead_nodes, fn (node) ->
+          state = NwNode.get_state(node)
+          s = Map.fetch!(state, :s)
+          w = Map.fetch!(state, :w)
+          IO.inspect(s/w)
+        end)
+        IO.puts("All done!!")
+        exit(:shutdown)
+      end
 
       {:noreply, state}
     else

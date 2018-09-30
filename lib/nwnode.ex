@@ -5,6 +5,10 @@ defmodule NwNode do
     GenServer.start_link(__MODULE__, args, opts)
   end
 
+  def get_state(server) do
+    GenServer.call(server, {:get_state})
+  end
+
   def set_neighbors(server, args) do
     GenServer.cast(server, {:set_neighbors, args})
   end
@@ -54,11 +58,10 @@ defmodule NwNode do
   def handle_cast({:update_neighbors, args}, state) do
     neighbors = Map.fetch!(state, :neigh)
     neighbors = neighbors ++ args
-    IO.inspect neighbors
+    # IO.inspect neighbors
     state = Map.replace!(state, :neigh, neighbors)
     {:noreply, state}
   end
-
 
   def handle_cast({:gossip, args}, state) do
     # for first time receiving msg update state
@@ -84,70 +87,89 @@ defmodule NwNode do
   end
 
   def handle_cast({:pushsum, args}, state) do
-    IO.puts("pushsum")
     {server, new_s, new_w} = args
+    neighbors = Map.get(state, :neigh)
 
-    # create a function for this repeatitive thing
-    s = Map.fetch!(state, :s)
-    w = Map.fetch!(state, :w)
+    if neighbors == [] do
+      IO.puts("OVER")
+      Listener.delete_me(MyListener, server)
+      {:noreply, state}
+    else
+      # IO.puts("pushsum")
 
-    # ratio from previous iteration
-    old_ratio = s / w
+      # create a function for this repeatitive thing
+      s = Map.fetch!(state, :s)
+      w = Map.fetch!(state, :w)
 
-    state = Map.replace!(state, :s, s + new_s)
-    state = Map.replace!(state, :w, w + new_w)
+      # ratio from previous iteration
+      old_ratio = s / w
 
-    # storing half the updated s and w : Need to send and retain the same
-    s_t = Map.fetch!(state, :s) / 2
-    w_t = Map.fetch!(state, :w) / 2
+      state = Map.replace!(state, :s, s + new_s)
+      state = Map.replace!(state, :w, w + new_w)
 
-    # creating queue to store the s/w
-    queue = Map.fetch!(state, :queue)
-    ratio = s_t / w_t
+      # storing half the updated s and w : Need to send and retain the same
+      s_t = Map.fetch!(state, :s) / 2
+      w_t = Map.fetch!(state, :w) / 2
 
-    ratio_diff = abs(ratio - old_ratio)
+      # creating queue to store the s/w
+      queue = Map.fetch!(state, :queue)
+      ratio = s_t / w_t
 
-    if :queue.len(queue) == 3 do
-      queue_list = :queue.to_list(queue)
+      ratio_diff = abs(ratio - old_ratio)
 
-      boolean_list =
-        Enum.map(queue_list, fn i ->
-          i <= 0.001
-        end)
+      if :queue.len(queue) == 3 do
+        queue_list = :queue.to_list(queue)
 
-      # IO.puts "boolean_list"
-      # IO.inspect boolean_list
-      if boolean_list == [true, true, true] do
-        # terminate
-        # IO.puts "I'm done"
-        Listener.delete_me(MyListener, server)
-        {:noreply, state}
+        boolean_list =
+          Enum.map(queue_list, fn i ->
+            i <= 0.0001
+          end)
+
+        # IO.puts "boolean_list"
+        # IO.inspect boolean_list
+        if boolean_list == [true, true, true] do
+          # terminate
+          # IO.puts "I'm done"
+          Listener.delete_me(MyListener, server)
+          # IO.inspect "I'm terminating"
+          # IO.inspect state
+          # neighbors = get_neighbors(server)
+          # Enum.each(neighbors, fn(node)->
+          #   IO.inspect get_state(node)
+          # end)
+
+          {:noreply, state}
+        else
+          state = Map.replace!(state, :s, s_t)
+          state = Map.replace!(state, :w, w_t)
+          next_neighbor = Enum.random(Map.get(state, :neigh))
+          {_, queue} = :queue.out(queue)
+          queue = :queue.in(ratio_diff, queue)
+          state = Map.replace!(state, :queue, queue)
+          NwNode.pushsum(next_neighbor, {next_neighbor, s_t, w_t})
+          Process.send_after(server, {:pushsum, {server, s_t, w_t}}, :rand.uniform(100))
+          {:noreply, state}
+        end
       else
         state = Map.replace!(state, :s, s_t)
         state = Map.replace!(state, :w, w_t)
         next_neighbor = Enum.random(Map.get(state, :neigh))
-        {_, queue} = :queue.out(queue)
         queue = :queue.in(ratio_diff, queue)
         state = Map.replace!(state, :queue, queue)
         NwNode.pushsum(next_neighbor, {next_neighbor, s_t, w_t})
         Process.send_after(server, {:pushsum, {server, s_t, w_t}}, :rand.uniform(100))
         {:noreply, state}
       end
-    else
-      state = Map.replace!(state, :s, s_t)
-      state = Map.replace!(state, :w, w_t)
-      next_neighbor = Enum.random(Map.get(state, :neigh))
-      queue = :queue.in(ratio_diff, queue)
-      state = Map.replace!(state, :queue, queue)
-      NwNode.pushsum(next_neighbor, {next_neighbor, s_t, w_t})
-      Process.send_after(server, {:pushsum, {server, s_t, w_t}}, :rand.uniform(100))
-      {:noreply, state}
     end
   end
 
   def handle_call({:get_neighbors}, _from, state) do
     neighbors = Map.fetch!(state, :neigh)
     {:reply, neighbors, state}
+  end
+
+  def handle_call({:get_state}, _from, state) do
+    {:reply, state, state}
   end
 
   def handle_info({:pushsum, args}, state) do

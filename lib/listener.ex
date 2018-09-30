@@ -45,59 +45,32 @@ defmodule Listener do
     {:noreply, state}
   end
 
+  # termination for GOSSIP
   def handle_cast({:gossip_done, node_name}, state) do
     neighbors_list = Map.fetch!(state, :neighbors)
     dead_nodes = Map.fetch!(state, :dead_nodes)
     dead_nodes = [node_name | dead_nodes]
-    # fetch neighbors of the node to be deleted. 
-    # curr_neighbors = Map.fetch!(neighbors_list, node_name)
-    # # iterate through the neighbors of the node to be deleted
-    # Enum.each(curr_neighbors, fn neighbor ->
-    #   # neighbors_neighbors is a list of each (neighbor of node_name)'s neighbors
-    #   neighbors_neighbors = Map.fetch!(neighbors_list, neighbor)
-    #   neighbors_neighbors = List.delete(neighbors_neighbors, node_name)
-    #   # now neighbors_neighbors is the new updated list
-    #   neighbors_list = Map.replace!(neighbors_list, neighbor, neighbors_neighbors)
-    #   # update each node's neighbors list in nwnode.ex
-    #   NwNode.remove_neighbor(neighbor, node_name)
-    #   state = Map.replace!(state, :neighbors, neighbors_list)
-    # end)
-
     neighbors_list_count = Enum.count(Map.keys(neighbors_list))
-
+    # terminating when all the nodes are dead
     if Enum.count(dead_nodes) == neighbors_list_count do
-      IO.puts("ALL FINISHED!!")
-      exit(:shutdown)
+      # IO.puts("ALL FINISHED!!")
+      send Main, {:done}
     end
 
     state = Map.replace!(state, :dead_nodes, dead_nodes)
     {:noreply, state}
   end
 
+  # term ination for PushSum
   def handle_cast({:delete_me, node_name}, state) do
     dead_nodes = Map.fetch!(state, :dead_nodes)
-    # IO.inspect(dead_nodes)
-
+    # adding node name to dead nodes list
     if node_name not in dead_nodes do
       dead_nodes = [node_name | dead_nodes]
       state = Map.replace!(state, :dead_nodes, dead_nodes)
-
       neighbors_list = Map.fetch!(state, :neighbors)
-      # # curr_neighbors is a list of node_name's neighbors
-      # curr_neighbors = Map.fetch!(neighbors_list, node_name)
-
-      # Enum.map(curr_neighbors, fn neighbor ->
-      #   # neighbors_neighbors is a list of each (neighbor of node_name)'s neighbors
-      #   neighbors_neighbors = Map.fetch!(neighbors_list, neighbor)
-      #   neighbors_neighbors = List.delete(neighbors_neighbors, node_name)
-      #   # now neighbors_neighbors is the new updated list
-      #   neighbors_list = Map.replace!(neighbors_list, neighbor, neighbors_neighbors)
-      #   NwNode.remove_neighbor(neighbor, node_name)
-      #   set_neighbors(MyListener, {neighbor, neighbors_neighbors})
-      #   # state = Map.replace!(state, :neighbors, neighbors_list)
-      # end)
-
       neighbors_list_count = Enum.count(Map.keys(neighbors_list))
+      # terminating when all the nodes have terminated
       if Enum.count(dead_nodes) == neighbors_list_count do
         Enum.each(dead_nodes, fn (node) ->
           state = NwNode.get_state(node)
@@ -105,14 +78,13 @@ defmodule Listener do
           w = Map.fetch!(state, :w)
           IO.inspect(s/w)
         end)
-        IO.puts("All done!!")
-        exit(:shutdown)
+        # IO.puts("All done!!")
+        send Main, {:done}
       end
 
       {:noreply, state}
     else
       {:noreply, state}
-      # the end for if
     end
   end
 end

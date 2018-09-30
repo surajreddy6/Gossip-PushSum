@@ -8,7 +8,6 @@ defmodule Line do
     {:ok, listener_pid} = Listener.start_link(name: MyListener)
 
     # get pids, names of child nodes
-    # Supervisor.count_children(pid)
     child_nodes = Supervisor.which_children(pid)
 
     # extract child names
@@ -18,9 +17,7 @@ defmodule Line do
         curr_name
       end)
 
-    # IO.inspect(child_names)
     # for the first and last node
-
     # TODO: put this in a clean function
     first_node = Enum.fetch!(child_names, 0)
     last_node = Enum.fetch!(child_names, length(child_names) - 1)

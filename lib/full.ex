@@ -8,7 +8,6 @@ defmodule Full do
     {:ok, listener_pid} = Listener.start_link(name: MyListener)
 
     # get pids, names of child nodes
-    # Supervisor.count_children(pid)
     child_nodes = Supervisor.which_children(pid)
 
     # extract child names
@@ -18,7 +17,6 @@ defmodule Full do
         curr_name
       end)
 
-    # IO.inspect(child_names)
     # setup a fully connected network
     Enum.map(child_names, fn curr_name ->
       # setting neighbors for each node, in full that is every other node
@@ -26,9 +24,6 @@ defmodule Full do
       # sending neighbor info of each node to listener
       Listener.set_neighbors(listener_pid, {curr_name, List.delete(child_names, curr_name)})
     end)
-
-    # IO.inspect(:sys.get_state(listener_pid))
-
     # returning supervisor pid
     pid
   end

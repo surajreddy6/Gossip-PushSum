@@ -8,7 +8,6 @@ defmodule D3 do
     {:ok, listener_pid} = Listener.start_link(name: MyListener)
 
     # get pids, names of child nodes
-    # Supervisor.count_children(pid)
     child_nodes = Supervisor.which_children(pid)
 
     # extract child names

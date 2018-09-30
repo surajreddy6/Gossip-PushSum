@@ -43,11 +43,14 @@ case {topology} do
     supervisor_pid = Rand2D.setup(n, algo)
     IO.puts "Starting #{algo} algorithm"
     # :timer.sleep(100000000)
+    :erlang.statistics(:wall_clock)
     Startnw.start(supervisor_pid, algo)
   end
 
 receive do 
   {:done} ->
+    {_, t} = :erlang.statistics(:wall_clock)
+    IO.puts "Time taken to complete #{algo} is #{t} milliseconds"
     if algo == :pushsum do
       dead_nodes = Listener.get_dead_nodes(MyListener)
       Enum.each(dead_nodes, fn node ->

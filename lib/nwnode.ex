@@ -6,7 +6,7 @@ defmodule NwNode do
   end
 
   def get_state(server) do
-    GenServer.call(server, {:get_state}, 10000)
+    GenServer.call(server, {:get_state}, :infinity)
   end
 
   def set_neighbors(server, args) do
@@ -18,7 +18,7 @@ defmodule NwNode do
   end
 
   def get_neighbors(server) do
-    GenServer.call(server, {:get_neighbors}, 10000)
+    GenServer.call(server, {:get_neighbors}, :infinity)
   end
 
   def remove_neighbor(server, node_name) do
@@ -81,9 +81,10 @@ defmodule NwNode do
       # IO.puts("I'm done")
       Listener.gossip_done(MyListener, server)
       # delete current node from all the neighbors list
-      Enum.each(Map.get(state, :neigh), fn(neighbor_node)->
+      Enum.each(Map.get(state, :neigh), fn neighbor_node ->
         NwNode.remove_neighbor(neighbor_node, server)
       end)
+
       {:noreply, state}
     end
   end
@@ -111,8 +112,9 @@ defmodule NwNode do
 
     ratio_diff = abs(ratio - old_ratio)
 
+    # when the current node has no neighbors to communicate
     if neighbors == [] do
-      IO.puts("No neighbors to reach")
+      # IO.puts("No neighbors to reach")
       Listener.delete_me(MyListener, server)
       Startnw.start(Super, :pushsum)
       {:noreply, state}
@@ -135,9 +137,10 @@ defmodule NwNode do
           state = Map.replace!(state, :w, w_t)
 
           # delete current node from all the neighbors list
-          Enum.each(neighbors, fn(neighbor_node)->
+          Enum.each(neighbors, fn neighbor_node ->
             NwNode.remove_neighbor(neighbor_node, server)
           end)
+
           # IO.inspect "I'm terminating"
           {:noreply, state}
         else

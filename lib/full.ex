@@ -24,6 +24,7 @@ defmodule Full do
       # sending neighbor info of each node to listener
       Listener.set_neighbors(listener_pid, {curr_name, List.delete(child_names, curr_name)})
     end)
+
     # returning supervisor pid
     pid
   end

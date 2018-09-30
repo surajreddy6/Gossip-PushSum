@@ -41,6 +41,13 @@ case {topology} do
 
 receive do 
   {:done} ->
+    dead_nodes = Listener.get_dead_nodes(MyListener)
+    Enum.each(dead_nodes, fn node ->
+      state = NwNode.get_state(node)
+      s = Map.fetch!(state, :s)
+      w = Map.fetch!(state, :w)
+      IO.inspect(s / w)
+    end)
     IO.puts "Main is done"
 end
 

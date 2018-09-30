@@ -4,7 +4,7 @@ defmodule D3 do
   def create_child_nodes(children) do
     # start child nodes under supervisor
     {:ok, pid} = Supervisor.start_link(children, strategy: :one_for_one)
-    Process.register pid, Super
+    Process.register(pid, Super)
     # to listen to all the child nodes (keeping track of dead or alive state)
     {:ok, listener_pid} = Listener.start_link(name: MyListener)
 
@@ -18,10 +18,10 @@ defmodule D3 do
         curr_name
       end)
 
-    k = 3
+    max = 2
     n = length(child_names)
     # each stack will have n/3 nodes - as we will have three stacks
-    each_n = (n / k) |> trunc
+    each_n = (n / max) |> trunc
     sqroot_each_n = :math.sqrt(each_n) |> trunc
     lists = Enum.chunk_every(child_names, each_n)
 
@@ -33,7 +33,7 @@ defmodule D3 do
 
     d3array = 0..length(list_2darray) |> Stream.zip(list_2darray) |> Enum.into(%{})
 
-    IO.inspect(d3array)
+    # IO.inspect(d3array)
 
     # setting up basic 2D grip topology 
     Enum.each(d3array, fn {key, val} ->
@@ -41,7 +41,7 @@ defmodule D3 do
     end)
 
     # setting the 3D neighbors
-    Enum.each(0..(k - 1), fn k ->
+    Enum.each(0..(max - 1), fn k ->
       Enum.each(0..(sqroot_each_n - 1), fn i ->
         Enum.each(0..(sqroot_each_n - 1), fn j ->
           cond do
@@ -49,7 +49,7 @@ defmodule D3 do
               NwNode.update_neighbors(d3array[k][i][j], [d3array[k + 1][i][j]])
               Listener.update_neighbors(listener_pid, {d3array[k][i][j], [d3array[k + 1][i][j]]})
 
-            k == sqroot_each_n - 1 ->
+            k == max - 1 ->
               NwNode.update_neighbors(d3array[k][i][j], [d3array[k - 1][i][j]])
               Listener.update_neighbors(listener_pid, {d3array[k][i][j], [d3array[k - 1][i][j]]})
 
@@ -143,11 +143,11 @@ defmodule D3 do
 
   # setting up intial topology - FULL
   def setup(n, algo) do
-    k = 3
-    each_n = (n / k) |> trunc
+    max = 2
+    each_n = (n / max) |> :math.ceil() |> trunc
     sq_root = :math.sqrt(each_n)
     each_n = (:math.ceil(sq_root) * :math.ceil(sq_root)) |> trunc
-    n = each_n * k
+    n = each_n * max
 
     case {algo} do
       {:gossip} ->

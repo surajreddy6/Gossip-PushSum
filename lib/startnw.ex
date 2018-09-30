@@ -18,15 +18,19 @@ defmodule Startnw do
     #   end)
 
     # sending the first GOSSIP message
-    first_node = Enum.random(alive_nodes)
-    # TODO: message dynamic, current message is "Blue"
+    if length(alive_nodes) > 1 do
+      first_node = Enum.random(alive_nodes)
+      # TODO: message dynamic, current message is "Blue"
 
-    case {algo} do
-      {:gossip} ->
-        NwNode.gossip(first_node, {first_node, "Blue"})
+      case {algo} do
+        {:gossip} ->
+          NwNode.gossip(first_node, {first_node, "Blue"})
 
-      {:pushsum} ->
-        NwNode.pushsum(first_node, {first_node, 0, 0})
+        {:pushsum} ->
+          NwNode.pushsum(first_node, {first_node, 0, 0})
+      end
+    else
+      send Main, {:done}
     end
   end
 end

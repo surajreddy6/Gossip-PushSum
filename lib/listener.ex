@@ -23,9 +23,13 @@ defmodule Listener do
     GenServer.cast(server, {:gossip_done, node_name})
   end
 
+  def get_state(server) do
+    GenServer.call(server, {:get_state}, :infinity)
+  end
+
   def get_dead_nodes(server) do
     # node_name is passed
-    GenServer.call(server, {:get_dead_nodes}, 10000)
+    GenServer.call(server, {:get_dead_nodes}, :infinity)
   end
 
   def init(:ok) do
@@ -59,7 +63,7 @@ defmodule Listener do
     # terminating when all the nodes are dead
     if Enum.count(dead_nodes) == neighbors_list_count do
       # IO.puts("ALL FINISHED!!")
-      send Main, {:done}
+      send(Main, {:done})
     end
 
     state = Map.replace!(state, :dead_nodes, dead_nodes)
@@ -77,14 +81,14 @@ defmodule Listener do
       neighbors_list_count = Enum.count(Map.keys(neighbors_list))
       # terminating when all the nodes have terminated
       if Enum.count(dead_nodes) == neighbors_list_count do
-        Enum.each(dead_nodes, fn (node) ->
-          state = NwNode.get_state(node)
-          s = Map.fetch!(state, :s)
-          w = Map.fetch!(state, :w)
-          IO.inspect(s/w)
-        end)
+        # Enum.each(dead_nodes, fn node ->
+        #   state = NwNode.get_state(node)
+        #   s = Map.fetch!(state, :s)
+        #   w = Map.fetch!(state, :w)
+        #   IO.inspect(s / w)
+        # end)
         # IO.puts("All done!!")
-        send Main, {:done}
+        send(Main, {:done})
       end
 
       {:noreply, state}
@@ -93,8 +97,11 @@ defmodule Listener do
     end
   end
 
-
   def handle_call({:get_dead_nodes}, _from, state) do
     {:reply, state[:dead_nodes], state}
+  end
+
+  def handle_call({:get_state}, _from, state) do
+    {:reply, state, state}
   end
 end

@@ -72,6 +72,7 @@ defmodule NwNode do
     if count < 10 do
       # picking a random neighbor from the current node's (server's) neighbor list
       next_neighbor = Enum.random(Map.get(state, :neigh))
+      :timer.sleep(:rand.uniform(100))
       NwNode.gossip(next_neighbor, {next_neighbor, msg})
       Process.send_after(server, {:gossip, args}, :rand.uniform(100))
 
@@ -82,6 +83,10 @@ defmodule NwNode do
       IO.puts("I'm done")
       # find a way to talk to LISTENER
       Listener.gossip_done(MyListener, server)
+      # delete current node from all the neighbors list
+      Enum.each(Map.get(state, :neigh), fn(neighbor_node)->
+        NwNode.remove_neighbor(neighbor_node, server)
+      end)
       {:noreply, state}
     end
   end
@@ -95,8 +100,6 @@ defmodule NwNode do
       Listener.delete_me(MyListener, server)
       {:noreply, state}
     else
-      # IO.puts("pushsum")
-
       # create a function for this repeatitive thing
       s = Map.fetch!(state, :s)
       w = Map.fetch!(state, :w)
@@ -122,7 +125,7 @@ defmodule NwNode do
 
         boolean_list =
           Enum.map(queue_list, fn i ->
-            i <= 0.0001
+            i <= 0.0000000001
           end)
 
         # IO.puts "boolean_list"
@@ -130,8 +133,19 @@ defmodule NwNode do
         if boolean_list == [true, true, true] do
           # terminate
           # IO.puts "I'm done"
+          next_neighbor = Enum.random(Map.get(state, :neigh))
+          NwNode.pushsum(next_neighbor, {next_neighbor, s_t, w_t})
           Listener.delete_me(MyListener, server)
-          # IO.inspect "I'm terminating"
+          state = Map.replace!(state, :s, s_t)
+          state = Map.replace!(state, :w, w_t)
+
+          # delete current node from all the neighbors list
+          Enum.each(neighbors, fn(neighbor_node)->
+            NwNode.remove_neighbor(neighbor_node, server)
+          end)
+
+
+          IO.inspect "I'm terminating"
           # IO.inspect state
           # neighbors = get_neighbors(server)
           # Enum.each(neighbors, fn(node)->
@@ -146,8 +160,10 @@ defmodule NwNode do
           {_, queue} = :queue.out(queue)
           queue = :queue.in(ratio_diff, queue)
           state = Map.replace!(state, :queue, queue)
+          # :timer.sleep(:rand.uniform(100))
           NwNode.pushsum(next_neighbor, {next_neighbor, s_t, w_t})
-          Process.send_after(server, {:pushsum, {server, s_t, w_t}}, :rand.uniform(100))
+          # :timer.sleep(:rand.uniform(100))
+          # Process.send_after(server, {:pushsum, {server, s_t, w_t}}, 0)
           {:noreply, state}
         end
       else
@@ -156,8 +172,10 @@ defmodule NwNode do
         next_neighbor = Enum.random(Map.get(state, :neigh))
         queue = :queue.in(ratio_diff, queue)
         state = Map.replace!(state, :queue, queue)
+        # :timer.sleep(:rand.uniform(100))
         NwNode.pushsum(next_neighbor, {next_neighbor, s_t, w_t})
-        Process.send_after(server, {:pushsum, {server, s_t, w_t}}, :rand.uniform(100))
+        # :timer.sleep(:rand.uniform(100))
+        # Process.send_after(server, {:pushsum, {server, s_t, w_t}}, 0)
         {:noreply, state}
       end
     end

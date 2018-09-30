@@ -23,22 +23,21 @@ defmodule Startnw do
         NwNode.gossip(first_node, {first_node, "Blue"})
 
       {:pushsum} ->
-        Enum.map(child_nodes, fn child ->
-          {_, pid, _, _} = child
-        end)
-
+        # Enum.map(child_nodes, fn child ->
+        #   {_, pid, _, _} = child
+        # end)
         NwNode.pushsum(first_node, {first_node, 0, 0})
     end
 
     # Read state of all nodes
-    Enum.each(0..1, fn i ->
-      :timer.sleep(1_000_000_000)
-      IO.puts("Iteration - #{i}")
+    # Enum.each(0..1, fn i ->
+    #   :timer.sleep(1_000_000_000)
+    #   IO.puts("Iteration - #{i}")
 
-      Enum.map(child_nodes, fn child ->
-        {_, pid, _, _} = child
-        IO.inspect(:sys.get_state(pid, :infinity))
-      end)
-    end)
+    #   Enum.map(child_nodes, fn child ->
+    #     {_, pid, _, _} = child
+    #     IO.inspect(:sys.get_state(pid, :infinity))
+    #   end)
+    # end)
   end
 end

@@ -19,7 +19,6 @@ defmodule Full do
       end)
 
     # IO.inspect(child_names)
-
     # setup a fully connected network
     Enum.map(child_names, fn curr_name ->
       # setting neighbors for each node, in full that is every other node

@@ -37,17 +37,26 @@ case {topology} do
     supervisor_pid = D3.setup(n, algo)
     IO.puts "Starting #{algo} algorithm"
     Startnw.start(supervisor_pid, algo)
+
+  {:rand2D} ->
+    IO.puts "Setting up #{topology} network"
+    supervisor_pid = Rand2D.setup(n, algo)
+    IO.puts "Starting #{algo} algorithm"
+    # :timer.sleep(100000000)
+    Startnw.start(supervisor_pid, algo)
   end
 
 receive do 
   {:done} ->
-    dead_nodes = Listener.get_dead_nodes(MyListener)
-    Enum.each(dead_nodes, fn node ->
-      state = NwNode.get_state(node)
-      s = Map.fetch!(state, :s)
-      w = Map.fetch!(state, :w)
-      IO.inspect(s / w)
-    end)
+    if algo == :pushsum do
+      dead_nodes = Listener.get_dead_nodes(MyListener)
+      Enum.each(dead_nodes, fn node ->
+        state = NwNode.get_state(node)
+        s = Map.fetch!(state, :s)
+        w = Map.fetch!(state, :w)
+        IO.inspect(s / w)
+      end)
+    end
     IO.puts "Main is done"
 end
 

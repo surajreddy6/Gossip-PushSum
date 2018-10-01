@@ -42,17 +42,30 @@ $ mix run proj2_failure.exs 1000 rand2D gossip
 
 Gossip
 
-1. Line  -  512
-2. Full Network - 100000
-3. Grid - 100000
-4. Imperfect Grid - 100000
+* Full -
+* 3D -
+* Random2D -
+* Imperfect 2D -
+* Sphere -
+* Line -
 
 Push-sum
 
-1. Line - 256
-2. Full Network -1024
-3. Grid - 4096
-4. Imperfect Grid – 4096
+* Full -
+* 3D -
+* Random2D -
+* Imperfect 2D -
+* Sphere -
+* Line -
+
+
+
+
+
+## Authors
+
+* **Aditi Malladi UFID: 9828-6321**
+* **Suraj Kumar Reddy Thanugundla UFID: 3100-9916**
 
 
 

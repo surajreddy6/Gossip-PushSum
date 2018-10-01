@@ -1,21 +1,57 @@
-# GossipPushsum
+# Gossip Simulator
+Gossip type algorithms can be used both for group communication and for aggregate computation. The goal of this project is to determine the convergence of such algorithms through a simulator based on actors written in Elixir. Since actors in Elixir are fully asynchronous, the particular type of Gossip implemented is the so called Asynchronous Gossip.
 
-**TODO: Add description**
 
-## Installation
+![alt text](https://github.com/mohitisrani/DOS-Gossip-Simulator/blob/master/giphy.gif "Logo Title Text 1")
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `gossip_pushsum` to your list of dependencies in `mix.exs`:
 
-```elixir
-def deps do
-  [
-    {:gossip_pushsum, "~> 0.1.0"}
-  ]
-end
-```
+## Algorithms and Topologies included:
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/gossip_pushsum](https://hexdocs.pm/gossip_pushsum).
+### Gossip:
+
+1. Line
+2. Full Network
+3. Grid
+4. Imperfect Grid
+
+### Push-sum:
+
+1. Line
+2. Full Network
+3. Grid
+4. Imperfect Grid
+
+The executable included in the project can be run as follows:
+
+project2 numNodes topology algorithm
+
+::   ./gossip    numNodes    line|full|grid|i\_grid    gossip|pushsum
+
+
+
+Failure models were also implemented in this project and can be run as follows:
+
+project2 numNodes topology algorithm percentage
+
+where our parameter for analyzing failure of nodes is percentage of total failed nodes in network (1-50%)
+
+::   ./gossip    numNodes    line|full|grid|i\_grid    gossip|pushsum  percentage(1..50)
+
+Networks dealt with, for the following topology and algorithm
+
+Gossip
+
+1. Line  -  512
+2. Full Network - 100000
+3. Grid - 100000
+4. Imperfect Grid - 100000
+
+Push-sum
+
+1. Line - 256
+2. Full Network -1024
+3. Grid - 4096
+4. Imperfect Grid – 4096
+
+
 

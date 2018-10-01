@@ -40,6 +40,12 @@ $ mix run proj2.exs 1000 rand2D pushsum
 $ mix run proj2_failure.exs 1000 rand2D gossip
 ```
 
+#### Running PushSum for failure nodes
+
+```
+$ mix run proj2_failure.exs 1000 rand2D pushsum
+```
+
 Gossip
 
 * Full -

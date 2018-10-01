@@ -25,6 +25,10 @@ defmodule NwNode do
     GenServer.cast(server, {:remove_neighbor, node_name})
   end
 
+  def die(server) do
+    GenServer.cast(server, {:die, server})
+  end
+
   def gossip(server, args) do
     GenServer.cast(server, {:gossip, args})
   end
@@ -171,6 +175,14 @@ defmodule NwNode do
         {:noreply, state}
       end
     end
+  end
+
+  def handle_cast({:die, server}, state) do
+    neighbors = Map.fetch!(state, :neigh)
+    Enum.each(neighbors, fn neigh ->
+      NwNode.remove_neighbor(neigh, server)
+    end)
+    {:noreply, state}
   end
 
   def handle_call({:get_neighbors}, _from, state) do

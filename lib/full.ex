@@ -4,7 +4,7 @@ defmodule Full do
   def create_child_nodes(children) do
     # start child nodes under supervisor
     {:ok, pid} = Supervisor.start_link(children, strategy: :one_for_one)
-    # Process.register self(), Super
+    Process.register pid, Super
     # to listen to all the child nodes (keeping track of dead or alive state)
     {:ok, listener_pid} = Listener.start_link(name: MyListener)
     # get pids, names of child nodes

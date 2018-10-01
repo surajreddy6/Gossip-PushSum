@@ -67,16 +67,24 @@ defmodule NwNode do
     {server, msg} = args
     count = Map.get(state, :count)
 
+
     if count < 10 do
       # picking a random neighbor from the current node's (server's) neighbor list
-      next_neighbor = Enum.random(Map.get(state, :neigh))
-      :timer.sleep(:rand.uniform(100))
-      NwNode.gossip(next_neighbor, {next_neighbor, msg})
-      Process.send_after(server, {:gossip, args}, :rand.uniform(100))
+      neighbors = Map.get(state, :neigh)
+      if neighbors == [] do
+        # IO.puts("No neighbors to reach")
+        Listener.delete_me(MyListener, server)
+        Startnw.start(Super, :gossip)
+        {:noreply, state}
+      else
+        next_neighbor = Enum.random(neighbors)
+        NwNode.gossip(next_neighbor, {next_neighbor, msg})
+        Process.send_after(server, {:gossip, args}, 0)
 
-      # TODO: figure out how to update state only once - scope issue
-      state = Map.replace!(state, :msg, msg)
-      {:noreply, Map.replace!(state, :count, count + 1)}
+        # TODO: figure out how to update state only once - scope issue
+        state = Map.replace!(state, :msg, msg)
+        {:noreply, Map.replace!(state, :count, count + 1)}
+      end
     else
       # IO.puts("I'm done")
       Listener.gossip_done(MyListener, server)

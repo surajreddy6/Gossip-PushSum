@@ -90,8 +90,8 @@ Push-sum
 
 ## Authors
 
-* **Aditi Malladi UFID: 9828-6321**
-* **Suraj Kumar Reddy Thanugundla UFID: 3100-9916**
+* **Aditi Malladi**
+* **Suraj Kumar Reddy Thanugundla**
 
 
 
